@@ -401,6 +401,10 @@ public class PoT {
 	      capture.read(original_frame);
 	
 	      if (original_frame.empty()) {
+            if(frame_index == 0) {
+                LOG.severe("Cannot read the specified video file. Either its corrupt or there's a codec missing. Exiting...");
+                System.exit(1);
+            }
 	        break;
 	      } else {
 	        // resizing the captured frame and converting it to the gray scale
