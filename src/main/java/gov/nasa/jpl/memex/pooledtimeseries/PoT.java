@@ -193,63 +193,56 @@ public class PoT {
     ArrayList<FeatureVector> fv_list = new ArrayList<FeatureVector>();
 
     for (int k = 0; k < files.size(); k++) {
-      LOG.fine(files.get(k).toString());
+      try {
+        LOG.fine(files.get(k).toString());
 
-      ArrayList<double[][]> multi_series = new ArrayList<double[][]>();
-      Path file = files.get(k);
+        ArrayList<double[][]> multi_series = new ArrayList<double[][]>();
+        Path file = files.get(k);
 
-      // optical flow descriptors
-      String series_name1 = file.toString() + ".of.txt";
-      Path series_path1 = Paths.get(series_name1);
-      double[][] series1;
+        // optical flow descriptors
+        String series_name1 = file.toString() + ".of.txt";
+        Path series_path1 = Paths.get(series_name1);
+        double[][] series1;
 
-      if (save_mode == 0) {
-        try {
+        if (save_mode == 0) {
           series1 = getOpticalTimeSeries(file, 5, 5, 8);
           saveVectors(series1, series_path1);
+
+        } else {
+          series1 = loadTimeSeries(series_path1);
         }
 
-        catch (PoTException e) {
-          LOG.severe("PoTException occurred: " + e.message + " skipping file " + file);
-          continue;
-        }
+        multi_series.add(series1);
 
-      } else {
-        series1 = loadTimeSeries(series_path1);
-      }
+        // gradients descriptors
+        String series_name2 = file.toString() + ".hog.txt";
+        Path series_path2 = Paths.get(series_name2);
+        double[][] series2;
 
-      multi_series.add(series1);
-
-      // gradients descriptors
-      String series_name2 = file.toString() + ".hog.txt";
-      Path series_path2 = Paths.get(series_name2);
-      double[][] series2;
-
-      if (save_mode == 0) {
-        try {
+        if (save_mode == 0) {
           series2 = getGradientTimeSeries(file, 5, 5, 8);
           saveVectors(series2, series_path2);
+        } else {
+          series2 = loadTimeSeries(series_path2);
         }
-        catch (PoTException e) {
-          LOG.severe("PoTException occurred: " + e.message + " skipping file " + file);
-          continue;
+
+        multi_series.add(series2);
+
+        // computing features from series of descriptors
+        FeatureVector fv = new FeatureVector();
+
+        for (int i = 0; i < multi_series.size(); i++) {
+          fv.feature.add(computeFeaturesFromSeries(multi_series.get(i), tws, 1));
+          fv.feature.add(computeFeaturesFromSeries(multi_series.get(i), tws, 2));
+          fv.feature.add(computeFeaturesFromSeries(multi_series.get(i), tws, 5));
         }
-      } else {
-        series2 = loadTimeSeries(series_path2);
+        System.out.println("");
+        fv_list.add(fv);
+
+      } catch (PoTException e) {
+        LOG.severe("PoTException occurred: " + e.message + " skipping file " + file);
+        continue;
       }
-
-      multi_series.add(series2);
-
-      // computing features from series of descriptors
-      FeatureVector fv = new FeatureVector();
-
-      for (int i = 0; i < multi_series.size(); i++) {
-        fv.feature.add(computeFeaturesFromSeries(multi_series.get(i), tws, 1));
-        fv.feature.add(computeFeaturesFromSeries(multi_series.get(i), tws, 2));
-        fv.feature.add(computeFeaturesFromSeries(multi_series.get(i), tws, 5));
-      }
-      System.out.println("");
-      fv_list.add(fv);
     }
 
     double[][] similarities = calculateSimilarities(fv_list);
