@@ -240,11 +240,10 @@ public class PoT {
         fv_list.add(fv);
 
       } catch (PoTException e) {
-        LOG.severe("PoTException occurred: " + e.message + " skipping file " + file);
+        LOG.severe("PoTException occurred: " + e.message + ": Skipping file " + files.get(k));
         continue;
       }
     }
-
     double[][] similarities = calculateSimilarities(fv_list);
     writeSimilarityOutput(files, similarities);
   }
@@ -252,17 +251,38 @@ public class PoT {
   private static double[][] calculateSimilarities(ArrayList<FeatureVector> fv_list) {
     // feature vector similarity measure
     double[] mean_dists = new double[fv_list.get(0).numDim()];
-    for (int i = 0; i < fv_list.get(0).numDim(); i++)
-      mean_dists[i] = meanChiSquareDistances(fv_list, i);
+    for (int i = 0; i < fv_list.get(0).numDim(); i++) {
+      try {
+        mean_dists[i] = meanChiSquareDistances(fv_list, i);
+      }
+      catch (Exception e) {
+        LOG.severe("Exception while calculating meanChiSquareDistances " + e.getMessage());
+        continue;
+      }
+    }
 
-    for (int i = 0; i < fv_list.get(0).numDim(); i++)
-      System.out.format("%f ", mean_dists[i]);
+    for (int i = 0; i < fv_list.get(0).numDim(); i++)  {
+      try {
+        System.out.format("%f ", mean_dists[i]);
+      }
+      catch (Exception e) {
+        LOG.severe("Exception while formatting meanChiSquareDistances " + e.getMessage());
+        continue;
+      }
+
+    }
     System.out.println("");
 
     double[][] sims = new double[fv_list.size()][fv_list.size()];
     for (int i = 0; i < fv_list.size(); i++) {
       for (int j = 0; j < fv_list.size(); j++) {
-        sims[i][j] = kernelDistance(fv_list.get(i), fv_list.get(j), mean_dists);
+        try {
+          sims[i][j] = kernelDistance(fv_list.get(i), fv_list.get(j), mean_dists);
+        }
+        catch (Exception e) {
+          LOG.severe("Exception while calculating kernelDistances " + e.getMessage());
+          continue;
+        }
       }
     }
 
