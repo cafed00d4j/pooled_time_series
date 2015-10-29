@@ -204,8 +204,16 @@ public class PoT {
       double[][] series1;
 
       if (save_mode == 0) {
-        series1 = getOpticalTimeSeries(file, 5, 5, 8);
-        saveVectors(series1, series_path1);
+        try {
+          series1 = getOpticalTimeSeries(file, 5, 5, 8);
+          saveVectors(series1, series_path1);
+        }
+
+        catch (PoTException e) {
+          LOG.severe("PoTException occurred: " + e.message + " skipping file " + file);
+          continue;
+        }
+
       } else {
         series1 = loadTimeSeries(series_path1);
       }
@@ -218,8 +226,14 @@ public class PoT {
       double[][] series2;
 
       if (save_mode == 0) {
-        series2 = getGradientTimeSeries(file, 5, 5, 8);
-        saveVectors(series2, series_path2);
+        try {
+          series2 = getGradientTimeSeries(file, 5, 5, 8);
+          saveVectors(series2, series_path2);
+        }
+        catch (PoTException e) {
+          LOG.severe("PoTException occurred: " + e.message + " skipping file " + file);
+          continue;
+        }
       } else {
         series2 = loadTimeSeries(series_path2);
       }
@@ -332,7 +346,7 @@ public class PoT {
   }
 
   public static double[][] getOpticalTimeSeries(Path filename, int w_d,
-      int h_d, int o_d) {
+      int h_d, int o_d) throws PoTException {
     ArrayList<double[][][]> hists = getOpticalHistograms(filename, w_d, h_d,
         o_d);
     double[][] vectors = new double[hists.size()][];
@@ -362,7 +376,7 @@ public class PoT {
   }
 
   static ArrayList<double[][][]> getOpticalHistograms(Path filename, int w_d,
-      int h_d, int o_d) {
+      int h_d, int o_d) throws PoTException{
     ArrayList<double[][][]> histograms = new ArrayList<double[][][]>();
 
     VideoCapture capture = new VideoCapture(filename.toString());
@@ -389,7 +403,13 @@ public class PoT {
 	      capture.read(original_frame);
 	
 	      if (original_frame.empty()) {
-	        break;
+            if (original_frame.empty()) {
+              if (frame_index == 0) {
+                throw new PoTException("Could not read the video file");
+              }
+              else
+                break;
+            }
 	      } else {
 	        // resizing the captured frame and converting it to the gray scale
 	        // image.
@@ -538,7 +558,7 @@ public class PoT {
   }
 
   public static double[][] getGradientTimeSeries(Path filename, int w_d,
-      int h_d, int o_d) {
+      int h_d, int o_d) throws PoTException {
     ArrayList<double[][][]> hists = getGradientHistograms(filename, w_d, h_d,
         o_d);
     double[][] vectors = new double[hists.size()][];
@@ -551,7 +571,7 @@ public class PoT {
   }
 
   static ArrayList<double[][][]> getGradientHistograms(Path filename, int w_d,
-      int h_d, int o_d) {
+      int h_d, int o_d) throws PoTException{
     ArrayList<double[][][]> histograms = new ArrayList<double[][][]>();
 
     VideoCapture capture = new VideoCapture(filename.toString());
@@ -574,7 +594,13 @@ public class PoT {
 	      // capturing the video images
 	      capture.read(original_frame);
 	      if (original_frame.empty()) {
-	        break;
+            if (original_frame.empty()) {
+              if (i == 0) {
+                throw new PoTException("Could not read the video file");
+              }
+              else
+                break;
+            }
 	      }
 	
 	      double[][][] hist = new double[w_d][h_d][o_d];
