@@ -252,7 +252,7 @@ public class PoT {
     // feature vector similarity measure
     if (fv_list.size() < 1) {
       LOG.info("Feature Vector list is empty. Nothing to calculate. Exiting...");
-      return null;
+      System.exit(1);
     }
     double[] mean_dists = new double[fv_list.get(0).numDim()];
     for (int i = 0; i < fv_list.get(0).numDim(); i++)
